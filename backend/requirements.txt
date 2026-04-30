@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+sqlalchemy[asyncio]
+asyncpg
+alembic
+pydantic[email]>=2.0.0
+python-jose[cryptography]
+passlib[bcrypt]
+python-dotenv
+openai
+httpx
