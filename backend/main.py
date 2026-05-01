@@ -4,12 +4,12 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .auth import router as auth_router
-from .models import Base, engine
-from .routers.agents import router as agents_router
-from .routers.jobs import router as jobs_router
-from .routers.match import router as match_router
-from .routers.matches import router as matches_router
+from auth import router as auth_router
+from models import Base, engine
+from routers.agents import router as agents_router
+from routers.jobs import router as jobs_router
+from routers.match import router as match_router
+from routers.matches import router as matches_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

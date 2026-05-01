@@ -10,8 +10,8 @@ from openai import AsyncOpenAI
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..dependencies import get_db
-from ..models import Agent, Job, Match, User
+from dependencies import get_db
+from models import Agent, Job, Match, User
 
 router = APIRouter(prefix="/match", tags=["match"])
 

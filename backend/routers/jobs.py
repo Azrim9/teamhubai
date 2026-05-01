@@ -7,8 +7,8 @@ from sqlalchemy import func, select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel, ConfigDict
 
-from ..dependencies import get_current_user, get_db
-from ..models import Job, JobStatus, User
+from dependencies import get_current_user, get_db
+from models import Job, JobStatus, User
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
 
