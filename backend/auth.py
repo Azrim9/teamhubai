@@ -1,4 +1,5 @@
 import os
+import bcrypt
 from datetime import datetime, timedelta
 from typing import Optional
 
@@ -9,8 +10,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel, EmailStr
 
-from .models import User
-from .dependencies import get_db
+from models import User
+from dependencies import get_db
 
 # Configuration
 SECRET_KEY = os.getenv("JWT_SECRET_KEY")
@@ -18,7 +19,7 @@ ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 15))
 REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", 7))
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto", bcrypt__rounds=12)
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 

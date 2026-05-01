@@ -7,8 +7,8 @@ from pydantic import BaseModel, ConfigDict
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..dependencies import get_current_user, get_db
-from ..models import Job, Match, User
+from dependencies import get_current_user, get_db
+from models import Job, Match, User
 
 router = APIRouter(prefix="/matches", tags=["matches"])
 
