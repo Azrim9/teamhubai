@@ -2,14 +2,16 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './lib/queryClient';
 import { AuthGuard } from './components/AuthGuard';
+import Layout from './components/Layout';
 import Login from './pages/Login';
+import Register from './pages/Register';
+import Dashboard from './pages/Dashboard';
+import Agents from './pages/Agents';
+import Jobs from './pages/Jobs';
+import Matches from './pages/Matches';
 
 // Placeholder components for routes
-const Register = () => <div>Register Page</div>;
-const Dashboard = () => <div>Dashboard</div>;
-const Agents = () => <div>Agents</div>;
-const Jobs = () => <div>Jobs</div>;
-const Matches = () => <div>Matches</div>;
+const Settings = () => <div>Settings</div>;
 
 function App() {
   return (
@@ -21,25 +23,41 @@ function App() {
           
           <Route path="/" element={
             <AuthGuard>
-              <Dashboard />
+              <Layout>
+                <Dashboard />
+              </Layout>
             </AuthGuard>
           } />
           
           <Route path="/agents" element={
             <AuthGuard>
-              <Agents />
+              <Layout>
+                <Agents />
+              </Layout>
             </AuthGuard>
           } />
           
           <Route path="/jobs" element={
             <AuthGuard>
-              <Jobs />
+              <Layout>
+                <Jobs />
+              </Layout>
             </AuthGuard>
           } />
 
           <Route path="/matches" element={
             <AuthGuard>
-              <Matches />
+              <Layout>
+                <Matches />
+              </Layout>
+            </AuthGuard>
+          } />
+
+          <Route path="/settings" element={
+            <AuthGuard>
+              <Layout>
+                <Settings />
+              </Layout>
             </AuthGuard>
           } />
 

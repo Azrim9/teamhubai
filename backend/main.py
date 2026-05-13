@@ -26,13 +26,13 @@ app = FastAPI(
 )
 
 # CORS Middleware
-cors_origins = os.getenv("CORS_ORIGINS", "").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=cors_origins if cors_origins != [""] else ["*"],
+    allow_origins=["http://localhost:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # Include Routers

@@ -6,7 +6,7 @@ from typing import AsyncGenerator
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from jose import JWTError, jwt
-from openai import AsyncOpenAI
+from groq import AsyncGroq
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -15,7 +15,7 @@ from models import Agent, Job, Match, User
 
 router = APIRouter(prefix="/match", tags=["match"])
 
-client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+client = AsyncGroq(api_key=os.getenv("GROQ_API_KEY"))
 
 SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
@@ -35,7 +35,7 @@ async def get_current_user_from_query(token: str, db: AsyncSession) -> User:
         raise HTTPException(status_code=401, detail="User not found")
     return user
 
-@router.post("/stream/{job_id}")
+@router.get("/stream/{job_id}")
 async def match_stream(
     job_id: uuid.UUID,
     token: str = Query(...),
@@ -60,7 +60,7 @@ async def match_stream(
         raise HTTPException(status_code=400, detail="No agents found. Please create agents first.")
 
     agent_descriptions = "\n".join([
-        f"- ID: {a.id}, Name: {a.name}, Role: {a.role}, Skills: {', '.join(a.skills)}"
+        f"- AGENT_ID={str(a.id)} | Name: {a.name} | Role: {a.role} | Skills: {', '.join(a.skills)}"
         for a in agents
     ])
     
@@ -76,21 +76,31 @@ AVAILABLE AGENTS:
 {agent_descriptions}
 
 INSTRUCTIONS:
-1. Provide a detailed reasoning for why each of the top 3 agents is a good fit.
-2. After your reasoning, provide a JSON block delimited by ```json and ``` containing exactly 3 matches.
-Format:
+CRITICAL: Copy each AGENT_ID value exactly as shown above. 
+These are UUIDs and must not be shortened or modified in any way.
+1. Analyze each agent's skills against the job requirements.
+2. Select exactly the top 3 agents ranked by skill match.
+3. Provide your reasoning first.
+4. Then output a JSON block with EXACTLY this format, using the 
+   COMPLETE agent IDs exactly as provided above (do not truncate them):
+
+```json
 [
-  {{"agent_id": "UUID", "rank": 1, "score": 0.95}},
-  {{"agent_id": "UUID", "rank": 2, "score": 0.85}},
-  {{"agent_id": "UUID", "rank": 3, "score": 0.75}}
+  {{"agent_id": "FULL-UUID-HERE", "rank": 1, "score": 0.95}},
+  {{"agent_id": "FULL-UUID-HERE", "rank": 2, "score": 0.80}},
+  {{"agent_id": "FULL-UUID-HERE", "rank": 3, "score": 0.65}}
 ]
+```
+
+IMPORTANT: Use the exact full UUID strings from the AVAILABLE AGENTS 
+list above. Do not shorten or truncate any ID.
 """
 
     async def event_generator() -> AsyncGenerator[str, None]:
         full_response = ""
         try:
             response = await client.chat.completions.create(
-                model="gpt-4o-mini",
+                model="llama-3.3-70b-versatile",
                 messages=[
                     {"role": "system", "content": "You are a specialized agent matching assistant."},
                     {"role": "user", "content": prompt}
@@ -112,6 +122,11 @@ Format:
                     json_str = full_response.split("```json")[1].split("```")[0].strip()
                     match_results = json.loads(json_str)
                     
+                    # Delete existing matches for this job before saving new ones
+                    from sqlalchemy import delete
+                    await db.execute(delete(Match).where(Match.job_id == job.id))
+                    await db.commit()
+                    
                     for m in match_results[:3]:
                         new_match = Match(
                             job_id=job.id,
@@ -129,4 +144,13 @@ Format:
         except Exception as e:
             yield f"data: Error: {str(e)}\n\n"
 
-    return StreamingResponse(event_generator(), media_type="text/event-stream")
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Access-Control-Allow-Origin": "http://localhost:5173",
+            "Access-Control-Allow-Credentials": "true",
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+        }
+    )
